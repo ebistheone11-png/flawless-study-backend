@@ -1,64 +1,21 @@
 import express from "express";
 import cors from "cors";
 
-const app = express();
-const PORT = process.env.PORT || 10000;
+const app=express(), PORT=process.env.PORT||10000;
+app.use(cors()); app.use(express.json({limit:"12mb"}));
 
-app.use(cors());
-app.use(express.json({ limit: "1mb" }));
+app.get("/",(_q,r)=>r.json({ok:true,service:"Flawless Screen Study Helper"}));
+app.get("/health",(_q,r)=>r.json({ok:true,service:"Flawless Screen Study Helper"}));
 
-app.get("/", (_req, res) => {
-  res.json({
-    ok: true,
-    service: "Flawless Study Helper",
-    message: "Backend is online."
-  });
+app.post("/study",(req,res)=>{
+ const {mode,question,answer}=req.body||{};
+ if(mode==="screen_help"){
+   return res.json({result:
+    "🧠 Screen Help\\n\\nI can help you work through the visible problem. Start by identifying what the question asks, list the information you are given, choose the rule/formula that fits, and work through one step at a time.\\n\\nFor a real AI explanation of the captured screen, connect an AI vision provider to this endpoint using a server-side API key."});
+ }
+ if(!question?.trim()) return res.status(400).json({error:"A question is required."});
+ if(!answer?.trim()) return res.status(400).json({error:"Enter your answer so I can check your work."});
+ return res.json({result:
+  "⚠️ I can't reliably verify this answer from text alone. Compare each step with the rule/example from your lesson and check that your final answer directly answers the question."});
 });
-
-app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "Flawless Study Helper" });
-});
-
-function makeStudyResponse(question, mode) {
-  const q = question.trim();
-
-  if (mode === "explain") {
-    return {
-      explanation:
-        `Let's work through this as a study problem:\n\n` +
-        `1. Identify what the question is asking.\n` +
-        `2. Look for the important facts or numbers in the question.\n` +
-        `3. Choose the rule, formula, or idea that applies.\n` +
-        `4. Work through the steps and check that the result makes sense.\n\n` +
-        `Your question was: "${q}"\n\n` +
-        `If you want a more specific explanation, make sure the full question and any answer choices are selected.`
-    };
-  }
-
-  return {
-    hint:
-      `💡 Hint: Start by identifying exactly what the question is asking you to find. ` +
-      `Then use the key information in the question and the rule or concept from your lesson. ` +
-      `Don't worry about getting it immediately—work through it one step at a time.\n\n` +
-      `Question: "${q}"`
-  };
-}
-
-app.post("/study", (req, res) => {
-  const { question, mode = "hint" } = req.body || {};
-
-  if (!question || typeof question !== "string" || !question.trim()) {
-    return res.status(400).json({ error: "A question is required." });
-  }
-
-  if (question.length > 5000) {
-    return res.status(400).json({ error: "Please select a shorter question." });
-  }
-
-  const result = makeStudyResponse(question, mode);
-  return res.json(result);
-});
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Flawless backend running on port ${PORT}`);
-});
+app.listen(PORT,"0.0.0.0",()=>console.log(`Flawless backend running on port ${PORT}`));
